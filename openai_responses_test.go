@@ -1,8 +1,10 @@
-package resp2chat
+package resp2chat_test
 
 import (
 	"encoding/json"
 	"testing"
+
+	. "resp2chat"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
