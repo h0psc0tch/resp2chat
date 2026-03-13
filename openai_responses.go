@@ -460,11 +460,3 @@ type OpenAIResponsesRequest struct {
 	ContextManagement []ContextManagementParam `json:"context_management,omitempty"`
 }
 
-// UnmarshalOpenAIResponsesRequest parses JSON into an OpenAIResponsesRequest.
-func UnmarshalOpenAIResponsesRequest(data []byte) (*OpenAIResponsesRequest, error) {
-	var req OpenAIResponsesRequest
-	if err := json.Unmarshal(data, &req); err != nil {
-		return nil, err
-	}
-	return &req, nil
-}

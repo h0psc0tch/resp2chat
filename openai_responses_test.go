@@ -12,7 +12,8 @@ import (
 
 func TestUnmarshalOpenAIResponsesRequest_MinimalRequest(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Hello"}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, "gpt-4o", req.Model)
 	assert.Equal(t, "Hello", req.Input.Text)
@@ -21,7 +22,8 @@ func TestUnmarshalOpenAIResponsesRequest_MinimalRequest(t *testing.T) {
 
 func TestUnmarshalOpenAIResponsesRequest_StringInput(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Tell me a story"}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, "Tell me a story", req.Input.Text)
 	assert.Empty(t, req.Input.Items)
@@ -34,7 +36,8 @@ func TestUnmarshalOpenAIResponsesRequest_ArrayInputSingleMessage(t *testing.T) {
 			{"type": "message", "role": "user", "content": "Hello"}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.Input.Items, 1)
 	item := req.Input.Items[0]
@@ -54,7 +57,8 @@ func TestUnmarshalOpenAIResponsesRequest_ArrayInputMultipleRoles(t *testing.T) {
 			{"type": "message", "role": "developer", "content": "Internal note"}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.Input.Items, 4)
 	assert.Equal(t, "system", req.Input.Items[0].Role)
@@ -76,7 +80,8 @@ func TestUnmarshalOpenAIResponsesRequest_ContentPartsText(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	item := req.Input.Items[0]
 	require.NotNil(t, item.Content)
@@ -101,7 +106,8 @@ func TestUnmarshalOpenAIResponsesRequest_ContentPartsImage(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	parts := req.Input.Items[0].Content.Parts
 	require.Len(t, parts, 2)
@@ -125,7 +131,8 @@ func TestUnmarshalOpenAIResponsesRequest_ContentPartsImageFileID(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	part := req.Input.Items[0].Content.Parts[0]
 	assert.Equal(t, "input_image", part.Type)
@@ -147,7 +154,8 @@ func TestUnmarshalOpenAIResponsesRequest_ContentPartsFile(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	parts := req.Input.Items[0].Content.Parts
 	assert.Equal(t, "input_file", parts[1].Type)
@@ -162,7 +170,8 @@ func TestUnmarshalOpenAIResponsesRequest_ItemReference(t *testing.T) {
 			{"type": "message", "role": "user", "content": "Follow up"}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.Input.Items, 2)
 	assert.Equal(t, "item_reference", req.Input.Items[0].Type)
@@ -184,7 +193,8 @@ func TestUnmarshalOpenAIResponsesRequest_FunctionTool(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.Tools, 1)
 	tool := req.Tools[0]
@@ -210,7 +220,8 @@ func TestUnmarshalOpenAIResponsesRequest_FileSearchTool(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	tool := req.Tools[0]
 	assert.Equal(t, "file_search", tool.Type)
@@ -225,7 +236,8 @@ func TestUnmarshalOpenAIResponsesRequest_WebSearchTool(t *testing.T) {
 		"input": "Search the web",
 		"tools": [{"type": "web_search", "search_context_size": "medium"}]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	tool := req.Tools[0]
 	assert.Equal(t, "web_search", tool.Type)
@@ -239,7 +251,8 @@ func TestUnmarshalOpenAIResponsesRequest_WebSearchPreviewTool(t *testing.T) {
 		"input": "Search",
 		"tools": [{"type": "web_search_preview"}]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, "web_search_preview", req.Tools[0].Type)
 	assert.NotNil(t, req.Tools[0].WebSearch)
@@ -247,7 +260,8 @@ func TestUnmarshalOpenAIResponsesRequest_WebSearchPreviewTool(t *testing.T) {
 
 func TestUnmarshalOpenAIResponsesRequest_CodeInterpreterTool(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Run code", "tools": [{"type": "code_interpreter"}]}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	tool := req.Tools[0]
 	assert.Equal(t, "code_interpreter", tool.Type)
@@ -269,7 +283,8 @@ func TestUnmarshalOpenAIResponsesRequest_MCPTool(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	tool := req.Tools[0]
 	assert.Equal(t, "mcp", tool.Type)
@@ -285,7 +300,8 @@ func TestUnmarshalOpenAIResponsesRequest_UnknownToolPreservesRaw(t *testing.T) {
 		"input": "Test",
 		"tools": [{"type": "future_tool", "some_field": "value"}]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	tool := req.Tools[0]
 	assert.Equal(t, "future_tool", tool.Type)
@@ -296,7 +312,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceStringModes(t *testing.T) {
 	for _, mode := range []string{"none", "auto", "required"} {
 		t.Run(mode, func(t *testing.T) {
 			data := `{"model": "gpt-4o", "input": "Hi", "tool_choice": "` + mode + `"}`
-			req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+			var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 			require.NoError(t, err)
 			require.NotNil(t, req.ToolChoice)
 			assert.Equal(t, mode, req.ToolChoice.Mode)
@@ -310,7 +327,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceFunction(t *testing.T) {
 		"input": "Hi",
 		"tool_choice": {"type": "function", "name": "get_weather"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.ToolChoice)
 	require.NotNil(t, req.ToolChoice.Fn)
@@ -324,7 +342,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceHosted(t *testing.T) {
 		"input": "Search",
 		"tool_choice": {"type": "file_search"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.ToolChoice)
 	require.NotNil(t, req.ToolChoice.Hosted)
@@ -338,7 +357,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceMCP(t *testing.T) {
 		"input": "Use MCP",
 		"tool_choice": {"type": "mcp", "server_label": "my-server", "name": "my_tool"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.ToolChoice.MCP)
 	assert.Equal(t, "my-server", req.ToolChoice.MCP.ServerLabel)
@@ -351,7 +371,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceCustom(t *testing.T) {
 		"input": "Hi",
 		"tool_choice": {"type": "custom", "name": "my_custom_tool"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.ToolChoice.Custom)
 	assert.Equal(t, "my_custom_tool", req.ToolChoice.Custom.Name)
@@ -367,7 +388,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceAllowed(t *testing.T) {
 			"tools": [{"type": "function", "name": "get_weather"}]
 		}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.ToolChoice.Allowed)
 	assert.Equal(t, "auto", req.ToolChoice.Allowed.Mode)
@@ -376,7 +398,8 @@ func TestUnmarshalOpenAIResponsesRequest_ToolChoiceAllowed(t *testing.T) {
 
 func TestUnmarshalOpenAIResponsesRequest_ConversationAsString(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Hello", "conversation": "conv_abc123"}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.Conversation)
 	assert.Equal(t, "conv_abc123", req.Conversation.ID)
@@ -384,7 +407,8 @@ func TestUnmarshalOpenAIResponsesRequest_ConversationAsString(t *testing.T) {
 
 func TestUnmarshalOpenAIResponsesRequest_ConversationAsObject(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Hello", "conversation": {"id": "conv_def456"}}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.Conversation)
 	assert.Equal(t, "conv_def456", req.Conversation.ID)
@@ -398,7 +422,8 @@ func TestUnmarshalOpenAIResponsesRequest_Reasoning(t *testing.T) {
 		"input": "Solve this",
 		"reasoning": {"effort": "high", "summary": "detailed"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.Reasoning)
 	assert.Equal(t, &effort, req.Reasoning.Effort)
@@ -411,7 +436,8 @@ func TestUnmarshalOpenAIResponsesRequest_TextFormatText(t *testing.T) {
 		"input": "Hi",
 		"text": {"format": {"type": "text"}}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.Text)
 	require.NotNil(t, req.Text.Format)
@@ -433,7 +459,8 @@ func TestUnmarshalOpenAIResponsesRequest_TextFormatJsonSchema(t *testing.T) {
 			}
 		}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	f := req.Text.Format
 	assert.Equal(t, "json_schema", f.Type)
@@ -445,7 +472,8 @@ func TestUnmarshalOpenAIResponsesRequest_TextFormatJsonSchema(t *testing.T) {
 
 func TestUnmarshalOpenAIResponsesRequest_TextFormatJsonObject(t *testing.T) {
 	data := `{"model": "gpt-4o", "input": "Hi", "text": {"format": {"type": "json_object"}}}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, "json_object", req.Text.Format.Type)
 }
@@ -459,7 +487,8 @@ func TestUnmarshalOpenAIResponsesRequest_StreamingRequest(t *testing.T) {
 		"stream": true,
 		"stream_options": {"include_obfuscation": false}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, &stream, req.Stream)
 	require.NotNil(t, req.StreamOptions)
@@ -473,7 +502,8 @@ func TestUnmarshalOpenAIResponsesRequest_ContextManagement(t *testing.T) {
 		"input": "Long conversation",
 		"context_management": [{"type": "compaction", "compact_threshold": 2000}]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.ContextManagement, 1)
 	cm := req.ContextManagement[0]
@@ -492,7 +522,8 @@ func TestUnmarshalOpenAIResponsesRequest_Prompt(t *testing.T) {
 			"variables": {"name": "Alice"}
 		}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.Prompt)
 	assert.Equal(t, "prompt_abc123", req.Prompt.ID)
@@ -540,7 +571,8 @@ func TestUnmarshalOpenAIResponsesRequest_AllOptionalScalarFields(t *testing.T) {
 		"include": ["message.output_text.logprobs"],
 		"metadata": {"env": "prod", "version": "1"}
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Equal(t, &temperature, req.Temperature)
 	assert.Equal(t, &topP, req.TopP)
@@ -571,7 +603,8 @@ func TestUnmarshalOpenAIResponsesRequest_NullOptionalFields(t *testing.T) {
 		"conversation": null,
 		"tool_choice": null
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	assert.Nil(t, req.Temperature)
 	assert.Nil(t, req.Reasoning)
@@ -580,12 +613,14 @@ func TestUnmarshalOpenAIResponsesRequest_NullOptionalFields(t *testing.T) {
 }
 
 func TestUnmarshalOpenAIResponsesRequest_InvalidJSON(t *testing.T) {
-	_, err := UnmarshalOpenAIResponsesRequest([]byte(`{invalid json`))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(`{invalid json`), &req)
 	assert.Error(t, err)
 }
 
 func TestUnmarshalOpenAIResponsesRequest_InvalidInputType(t *testing.T) {
-	_, err := UnmarshalOpenAIResponsesRequest([]byte(`{"model": "gpt-4o", "input": 42}`))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(`{"model": "gpt-4o", "input": 42}`), &req)
 	assert.Error(t, err)
 }
 
@@ -601,7 +636,8 @@ func TestUnmarshalOpenAIResponsesRequest_MultipleToolTypes(t *testing.T) {
 			{"type": "image_generation"}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.Len(t, req.Tools, 5)
 	assert.Equal(t, "function", req.Tools[0].Type)
@@ -614,7 +650,8 @@ func TestUnmarshalOpenAIResponsesRequest_MultipleToolTypes(t *testing.T) {
 func TestUnmarshalOpenAIResponsesRequest_RoundTripPreservesToolJSON(t *testing.T) {
 	toolJSON := `{"type":"function","name":"get_weather","description":"Get weather","parameters":{"type":"object"},"strict":true}`
 	data := `{"model":"gpt-4o","input":"Hi","tools":[` + toolJSON + `]}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	marshaled, err := json.Marshal(req.Tools[0])
 	require.NoError(t, err)
@@ -627,7 +664,8 @@ func TestUnmarshalOpenAIResponsesRequest_PreviousResponseIDMultiTurn(t *testing.
 		"input": "Follow up question",
 		"previous_response_id": "resp_xyz789"
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	require.NotNil(t, req.PreviousResponseID)
 	assert.Equal(t, "resp_xyz789", *req.PreviousResponseID)

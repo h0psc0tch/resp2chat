@@ -1,6 +1,7 @@
 package resp2chat_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	. "resp2chat"
@@ -421,7 +422,8 @@ func TestTranslate_DoesNotMutateReceiver(t *testing.T) {
 
 func TestTranslate_ViaUnmarshal_StringInput(t *testing.T) {
 	data := `{"model":"gpt-4o","input":"What is the speed of light?"}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	result, err := req.Translate()
 	require.NoError(t, err)
@@ -437,7 +439,8 @@ func TestTranslate_ViaUnmarshal_ArrayInput(t *testing.T) {
 			{"type": "message", "role": "user", "content": "What is 2+2?"}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	result, err := req.Translate()
 	require.NoError(t, err)
@@ -459,7 +462,8 @@ func TestTranslate_ViaUnmarshal_InputWithContentParts(t *testing.T) {
 			}
 		]
 	}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	result, err := req.Translate()
 	require.NoError(t, err)
@@ -470,7 +474,8 @@ func TestTranslate_ViaUnmarshal_InputWithContentParts(t *testing.T) {
 
 func TestTranslate_ViaUnmarshal_InstructionsOnly(t *testing.T) {
 	data := `{"model":"gpt-4o","input":"","instructions":"You are a pirate."}`
-	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
+	var req OpenAIResponsesRequest
+	err := json.Unmarshal([]byte(data), &req)
 	require.NoError(t, err)
 	result, err := req.Translate()
 	require.NoError(t, err)
