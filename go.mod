@@ -1,4 +1,4 @@
-module res2lak
+module resp2chat
 
 go 1.25.7
 

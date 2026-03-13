@@ -1,4 +1,4 @@
-package res2lak
+package resp2chat
 
 type OpenAI struct {
 	Messages OpenAIMessage `json:"messages"`
