@@ -10,4 +10,6 @@ Ensure all code builds correctly
 
 Ensure all tests are run and pass.
 
-When writing tests, use https://pkg.go.dev/github.com/stretchr/testify/assert package where appropriate to validate test outcomes.
+When writing tests:
+ - write tests in dedicated test packages (e.g. for package "mypackage" tests should be created in "mypackage_test")
+ - use https://pkg.go.dev/github.com/stretchr/testify/assert package where appropriate to validate test outcomes.
