@@ -36,7 +36,7 @@ func TestTranslate_StringInput(t *testing.T) {
 		Model: "gpt-4o",
 		Input: ResponseInput{Text: "Hello world"},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	require.Len(t, result.Messages.Content, 1)
@@ -50,7 +50,7 @@ func TestTranslate_StringInput_PreservesFullText(t *testing.T) {
 		Model: "gpt-4o",
 		Input: ResponseInput{Text: long},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, long, result.Messages.Content[0].Text)
 }
@@ -64,7 +64,7 @@ func TestTranslate_ArrayInput_SingleUserMessage_StringContent(t *testing.T) {
 			messageItem("user", "What is the capital of France?"),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	require.Len(t, result.Messages.Content, 1)
@@ -81,7 +81,7 @@ func TestTranslate_ArrayInput_SingleUserMessage_InputTextPart(t *testing.T) {
 			}),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	require.Len(t, result.Messages.Content, 1)
@@ -99,7 +99,7 @@ func TestTranslate_ArrayInput_MultipleInputTextParts(t *testing.T) {
 			}),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	require.Len(t, result.Messages.Content, 2)
 	assert.Equal(t, "First part.", result.Messages.Content[0].Text)
@@ -115,7 +115,7 @@ func TestTranslate_ArrayInput_SystemRole(t *testing.T) {
 			messageItem("system", "You are a helpful assistant."),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "system", result.Messages.Role)
 }
@@ -127,7 +127,7 @@ func TestTranslate_ArrayInput_DeveloperRole(t *testing.T) {
 			messageItem("developer", "Internal instruction."),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "developer", result.Messages.Role)
 }
@@ -139,7 +139,7 @@ func TestTranslate_ArrayInput_AssistantRole(t *testing.T) {
 			messageItem("assistant", "I can help with that."),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "assistant", result.Messages.Role)
 }
@@ -156,7 +156,7 @@ func TestTranslate_ArrayInput_MultipleMessages_UsesLast(t *testing.T) {
 			messageItem("user", "Follow-up question"),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "Follow-up question", result.Messages.Content[0].Text)
@@ -170,7 +170,7 @@ func TestTranslate_ArrayInput_SkipsItemReferences_UsesLastMessage(t *testing.T) 
 			{Type: "item_reference", ID: "msg_abc123"},
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "Original question", result.Messages.Content[0].Text)
@@ -185,7 +185,7 @@ func TestTranslate_ArrayInput_SkipsNonMessageItems_FindsEarlierMessage(t *testin
 			{Type: "function_call_output", Raw: []byte(`{"type":"function_call_output","output":"4"}`)},
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "What is 2+2?", result.Messages.Content[0].Text)
@@ -205,7 +205,7 @@ func TestTranslate_ImagePartsDropped_TextPartsPreserved(t *testing.T) {
 			}),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	// image part is not representable in OpenAIContent – only text survives
 	require.Len(t, result.Messages.Content, 1)
@@ -224,7 +224,7 @@ func TestTranslate_FilePartsDropped_TextPartsPreserved(t *testing.T) {
 			}),
 		}},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	require.Len(t, result.Messages.Content, 1)
 	assert.Equal(t, "Summarise the attached file.", result.Messages.Content[0].Text)
@@ -243,7 +243,7 @@ func TestTranslate_OnlyImageParts_SkipsToEarlierItem(t *testing.T) {
 		}},
 	}
 	// last item has only image content → not representable → fall back to previous item
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "Earlier text message", result.Messages.Content[0].Text)
 }
@@ -256,7 +256,7 @@ func TestTranslate_InstructionsOnly_NoInput(t *testing.T) {
 		Input:        ResponseInput{},
 		Instructions: strPtr("You are a helpful assistant."),
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "system", result.Messages.Role)
 	require.Len(t, result.Messages.Content, 1)
@@ -272,7 +272,7 @@ func TestTranslate_InstructionsIgnored_WhenInputPresent(t *testing.T) {
 		Input:        ResponseInput{Text: "Hello"},
 		Instructions: strPtr("You are a helpful assistant."),
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "Hello", result.Messages.Content[0].Text)
@@ -286,7 +286,7 @@ func TestTranslate_InstructionsIgnored_WhenArrayInputPresent(t *testing.T) {
 		}},
 		Instructions: strPtr("Be funny."),
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "Tell me a joke", result.Messages.Content[0].Text)
@@ -299,7 +299,7 @@ func TestTranslate_EmptyInput_NoInstructions_ReturnsError(t *testing.T) {
 		Model: "gpt-4o",
 		Input: ResponseInput{},
 	}
-	_, err := Translate(req)
+	_, err := req.Translate()
 	assert.Error(t, err)
 }
 
@@ -311,7 +311,7 @@ func TestTranslate_OnlyItemReferences_ReturnsError(t *testing.T) {
 			{Type: "item_reference", ID: "msg_2"},
 		}},
 	}
-	_, err := Translate(req)
+	_, err := req.Translate()
 	assert.Error(t, err)
 }
 
@@ -326,7 +326,7 @@ func TestTranslate_ArrayWithOnlyImageContent_ReturnsError(t *testing.T) {
 			}),
 		}},
 	}
-	_, err := Translate(req)
+	_, err := req.Translate()
 	assert.Error(t, err)
 }
 
@@ -340,7 +340,7 @@ func TestTranslate_ArrayWithOnlyFileContent_ReturnsError(t *testing.T) {
 			}),
 		}},
 	}
-	_, err := Translate(req)
+	_, err := req.Translate()
 	assert.Error(t, err)
 }
 
@@ -351,7 +351,7 @@ func TestTranslate_EmptyInstructions_ReturnsError(t *testing.T) {
 		Input:        ResponseInput{},
 		Instructions: &empty,
 	}
-	_, err := Translate(req)
+	_, err := req.Translate()
 	assert.Error(t, err)
 }
 
@@ -362,7 +362,7 @@ func TestTranslate_ContentTypeIsAlwaysText(t *testing.T) {
 		Model: "gpt-4o",
 		Input: ResponseInput{Text: "Hi"},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	for _, part := range result.Messages.Content {
 		assert.Equal(t, "text", part.Type)
@@ -382,10 +382,37 @@ func TestTranslate_OtherRequestFieldsDoNotAffectOutput(t *testing.T) {
 			{Type: "function", Function: &FunctionTool{Type: "function", Name: "get_time"}},
 		},
 	}
-	result, err := Translate(req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "Hello", result.Messages.Content[0].Text)
+}
+
+// ── method receiver behaviour ─────────────────────────────────────────────────
+
+func TestTranslate_CallableViaPointer(t *testing.T) {
+	// Value-receiver methods are accessible on pointers; confirm Translate
+	// works identically when invoked through a *OpenAIResponsesRequest.
+	req := &OpenAIResponsesRequest{
+		Model: "gpt-4o",
+		Input: ResponseInput{Text: "Pointer receiver test"},
+	}
+	result, err := req.Translate()
+	require.NoError(t, err)
+	assert.Equal(t, "user", result.Messages.Role)
+	assert.Equal(t, "Pointer receiver test", result.Messages.Content[0].Text)
+}
+
+func TestTranslate_DoesNotMutateReceiver(t *testing.T) {
+	// Translate must not modify the request it is called on.
+	original := OpenAIResponsesRequest{
+		Model: "gpt-4o",
+		Input: ResponseInput{Text: "Immutability check"},
+	}
+	snapshot := original
+	_, err := original.Translate()
+	require.NoError(t, err)
+	assert.Equal(t, snapshot, original)
 }
 
 // ── round-trip via JSON unmarshal ─────────────────────────────────────────────
@@ -394,7 +421,7 @@ func TestTranslate_ViaUnmarshal_StringInput(t *testing.T) {
 	data := `{"model":"gpt-4o","input":"What is the speed of light?"}`
 	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
 	require.NoError(t, err)
-	result, err := Translate(*req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "What is the speed of light?", result.Messages.Content[0].Text)
@@ -410,7 +437,7 @@ func TestTranslate_ViaUnmarshal_ArrayInput(t *testing.T) {
 	}`
 	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
 	require.NoError(t, err)
-	result, err := Translate(*req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "user", result.Messages.Role)
 	assert.Equal(t, "What is 2+2?", result.Messages.Content[0].Text)
@@ -432,7 +459,7 @@ func TestTranslate_ViaUnmarshal_InputWithContentParts(t *testing.T) {
 	}`
 	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
 	require.NoError(t, err)
-	result, err := Translate(*req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	// image part dropped; only the text part survives
 	require.Len(t, result.Messages.Content, 1)
@@ -443,7 +470,7 @@ func TestTranslate_ViaUnmarshal_InstructionsOnly(t *testing.T) {
 	data := `{"model":"gpt-4o","input":"","instructions":"You are a pirate."}`
 	req, err := UnmarshalOpenAIResponsesRequest([]byte(data))
 	require.NoError(t, err)
-	result, err := Translate(*req)
+	result, err := req.Translate()
 	require.NoError(t, err)
 	assert.Equal(t, "system", result.Messages.Role)
 	assert.Equal(t, "You are a pirate.", result.Messages.Content[0].Text)

@@ -2,8 +2,8 @@ package res2lak
 
 import "errors"
 
-// Translate converts an OpenAIResponsesRequest to the simplified OpenAI chat
-// completions representation.
+// Translate converts the receiver into the simplified OpenAI chat completions
+// representation.
 //
 // Mapping rules:
 //   - A string input becomes a user message with a single text content part.
@@ -15,7 +15,7 @@ import "errors"
 //     Instructions is used as a system message.
 //   - An error is returned when neither the input nor instructions provides any
 //     translatable content.
-func Translate(req OpenAIResponsesRequest) (OpenAI, error) {
+func (req OpenAIResponsesRequest) Translate() (OpenAI, error) {
 	msg, err := buildMessage(req)
 	if err != nil {
 		return OpenAI{}, err
