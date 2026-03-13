@@ -1,7 +1,7 @@
 package resp2chat
 
 type OpenAI struct {
-	Messages OpenAIMessage `json:"messages"`
+	Messages []OpenAIMessage `json:"messages"`
 }
 
 type OpenAIMessage struct {
