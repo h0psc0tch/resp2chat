@@ -429,17 +429,17 @@ type OpenAIResponsesRequest struct {
 	Model string        `json:"model"`
 	Input ResponseInput `json:"input"`
 
-	Instructions      *string             `json:"instructions,omitempty"`
-	PreviousResponseID *string            `json:"previous_response_id,omitempty"`
-	Reasoning         *Reasoning          `json:"reasoning,omitempty"`
-	Background        *bool               `json:"background,omitempty"`
-	MaxOutputTokens   *int                `json:"max_output_tokens,omitempty"`
-	MaxToolCalls      *int                `json:"max_tool_calls,omitempty"`
-	Text              *ResponseTextConfig `json:"text,omitempty"`
-	Tools             []Tool              `json:"tools,omitempty"`
-	ToolChoice        *ToolChoice         `json:"tool_choice,omitempty"`
-	Prompt            *ResponsePrompt     `json:"prompt,omitempty"`
-	Truncation        *string             `json:"truncation,omitempty"`
+	Instructions       *string             `json:"instructions,omitempty"`
+	PreviousResponseID *string             `json:"previous_response_id,omitempty"`
+	Reasoning          *Reasoning          `json:"reasoning,omitempty"`
+	Background         *bool               `json:"background,omitempty"`
+	MaxOutputTokens    *int                `json:"max_output_tokens,omitempty"`
+	MaxToolCalls       *int                `json:"max_tool_calls,omitempty"`
+	Text               *ResponseTextConfig `json:"text,omitempty"`
+	Tools              []Tool              `json:"tools,omitempty"`
+	ToolChoice         *ToolChoice         `json:"tool_choice,omitempty"`
+	Prompt             *ResponsePrompt     `json:"prompt,omitempty"`
+	Truncation         *string             `json:"truncation,omitempty"`
 
 	Temperature          *float64          `json:"temperature,omitempty"`
 	TopP                 *float64          `json:"top_p,omitempty"`
@@ -460,3 +460,48 @@ type OpenAIResponsesRequest struct {
 	ContextManagement []ContextManagementParam `json:"context_management,omitempty"`
 }
 
+func (o *OpenAIResponsesRequest) ToOpenAI() (OpenAI, error) {
+	var result OpenAI
+
+	if o.Instructions != nil && *o.Instructions != "" {
+		result.Messages = append(result.Messages, OpenAIMessage{
+			Role:    "system",
+			Content: []OpenAIContent{{Type: "text", Text: *o.Instructions}},
+		})
+	}
+
+	if o.Input.Text != "" {
+		result.Messages = append(result.Messages, OpenAIMessage{
+			Role:    "user",
+			Content: []OpenAIContent{{Type: "text", Text: o.Input.Text}},
+		})
+	}
+
+	for _, item := range o.Input.Items {
+		if item.Type != "message" {
+			continue
+		}
+		if item.Role == "" {
+			return OpenAI{}, fmt.Errorf("input message missing role")
+		}
+		msg := OpenAIMessage{Role: item.Role}
+		if item.Content != nil {
+			if item.Content.Text != "" {
+				msg.Content = []OpenAIContent{{Type: "text", Text: item.Content.Text}}
+			} else {
+				for _, part := range item.Content.Parts {
+					if part.Type == "input_text" {
+						msg.Content = append(msg.Content, OpenAIContent{Type: "text", Text: part.Text})
+					}
+				}
+			}
+		}
+		result.Messages = append(result.Messages, msg)
+	}
+
+	if len(result.Messages) == 0 {
+		return OpenAI{}, fmt.Errorf("no messages could be derived from input")
+	}
+
+	return result, nil
+}
